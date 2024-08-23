@@ -1,3 +1,4 @@
+import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { jobWxBotConfig } from '../package.json';
@@ -19,6 +20,8 @@ export interface Config {
 export class InternJobProvider {
   private sentJobsPath: string;
   private config: Config;
+  private githubUrl: string =
+    'https://raw.githubusercontent.com/SimplifyJobs/Summer2025-Internships/dev/README.md';
 
   constructor() {
     const homeDir = os.homedir();
@@ -28,6 +31,16 @@ export class InternJobProvider {
     }
     this.sentJobsPath = path.join(cacheDir, 'sent_jobs.json');
     this.config = { ...jobWxBotConfig, jobsPerMessage: jobWxBotConfig.jobsPerMessage || 3 };
+  }
+
+  private async fetchJobsFromGithub(): Promise<string> {
+    try {
+      const response = await axios.get(this.githubUrl);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching data from GitHub:', error);
+      throw error;
+    }
   }
 
   private extractTableFromMarkdown(markdownContent: string): Job[] {
@@ -65,15 +78,27 @@ export class InternJobProvider {
   }
 
   private cleanLocation(location: string): string {
-    return location.replace(/<br>/g, ', ');
+    return location
+      .replace(/<br\s*\/?>/gi, ', ')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   private extractApplicationLink(htmlString: string): string {
     const linkPattern = /href="([^"]*)/;
     const match = htmlString.match(linkPattern);
-    return match ? match[1] : 'No link available';
-  }
+    if (match) {
+      let link = match[1];
 
+      link = link.replace(/([?&]utm_source=Simplify)(&ref=Simplify)?($|&)/, '');
+      link = link.replace(/([?&])utm_source=Simplify(&ref=Simplify)?&/, '$1');
+      link = link.replace(/[?&]$/, '');
+
+      return link;
+    }
+    return 'No link available';
+  }
   private filterJobsByDate(jobs: Job[], days: number): Job[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -108,7 +133,7 @@ export class InternJobProvider {
   }
 
   public async getNewJobs(): Promise<Job[]> {
-    const markdownContent = fs.readFileSync('./jobs.md', 'utf8');
+    const markdownContent = await this.fetchJobsFromGithub();
     const allJobs = this.extractTableFromMarkdown(markdownContent);
     const filteredJobs = this.filterJobsByDate(allJobs, this.config.maxDays);
 
