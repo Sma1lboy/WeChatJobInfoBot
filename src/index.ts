@@ -1,13 +1,14 @@
 import { WechatyBuilder, Contact, Room, Message } from 'wechaty';
 import { ContactImpl } from 'wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal';
-import { InternJobProvider, NGJobProvider, Job } from './intern-job-provider';
 import { jobWxBotConfig } from '../package.json';
+import { InternJobProvider } from './providers/InternJobProvider';
+import { NGJobProvider } from './providers/NGJobProvider';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];
-const InternJob = new InternJobProvider();
-const NGJob = new NGJobProvider();
+const internJob = new InternJobProvider();
+const newGradJob = new NGJobProvider();
 function displayStartupBanner() {
   const banner = `
   ____    __  __    _    _     _     ____   ___ _____
@@ -23,13 +24,13 @@ function displayStartupBanner() {
   console.log(
     '\x1b[32m%s\x1b[0m',
     `📊 Configured to check every ${jobWxBotConfig.minsCheckInterval} minutes`,
-  ); // Green color
+  );
   console.log(
     '\x1b[32m%s\x1b[0m',
     `📅 Looking for jobs posted in the last ${jobWxBotConfig.maxDays} days`,
-  ); // Green color
-  console.log('\x1b[32m%s\x1b[0m', `💬 Target rooms: ${jobWxBotConfig.rooms.join(', ')}`); // Green color
-  console.log('\x1b[35m%s\x1b[0m', '🔍 Scanning QR Code to log in...\n'); // Magenta color
+  );
+  console.log('\x1b[32m%s\x1b[0m', `💬 Target rooms: ${jobWxBotConfig.rooms.join(', ')}`);
+  console.log('\x1b[35m%s\x1b[0m', '🔍 Scanning QR Code to log in...\n');
 }
 
 async function sendInternJobUpdates() {
@@ -37,9 +38,9 @@ async function sendInternJobUpdates() {
     console.log('No target rooms set');
     return;
   }
-  const newInternJobs = await InternJob.getNewJobs();
+  const newInternJobs = await internJob.getNewJobs();
   if (newInternJobs.length > 0) {
-    const messages = InternJob.formatJobMessages(newInternJobs);
+    const messages = internJob.formatJobMessages(newInternJobs);
     for (const room of targetRooms) {
       for (const message of messages) {
         await room.say(message);
@@ -58,9 +59,9 @@ async function sendNGJobUpdates() {
     console.log('No target rooms set');
     return;
   }
-  const newNGJobs = await NGJob.getNewJobs();
+  const newNGJobs = await newGradJob.getNewJobs();
   if (newNGJobs.length > 0) {
-    const messages = NGJob.formatJobMessages(newNGJobs);
+    const messages = newGradJob.formatJobMessages(newNGJobs);
     for (const room of targetRooms) {
       for (const message of messages) {
         await room.say(message);
@@ -99,24 +100,41 @@ wechaty
       ); // Cyan color
       setInterval(sendInternJobUpdates, jobWxBotConfig.minsCheckInterval * 60 * 1000);
       setInterval(sendNGJobUpdates, jobWxBotConfig.minsCheckInterval * 60 * 1000);
-      sendInternJobUpdates();
-      sendNGJobUpdates();
+      await sendInternJobUpdates();
+      await sendNGJobUpdates();
     } else {
       console.log('\x1b[31m%s\x1b[0m', '❌ No target rooms found. Bot cannot operate.'); // Red color
     }
   })
   .on('message', async (message: Message) => {
-    //TODO: need commands module
-    //TOOD: need debug mode
-    console.log(`Message received: ${message.text()}`);
-    if (message.text().toLowerCase() === '/internjobs') {
-      if (!(await sendInternJobUpdates())) {
-        message.say('No new jobs found for Intern roles');
-      }
-    }
-    if (message.text().toLowerCase() === '/ngjobs') {
-      if (!(await sendNGJobUpdates())) {
-        message.say('No new jobs found for ng roles');
+    const mentionSelf = await message.mentionSelf();
+    if (mentionSelf) {
+      const text = message.text().toLowerCase();
+      const command = text.split(' ')[1]; // Get the first word after the mention
+
+      switch (command) {
+        case 'intern':
+        case 'internjobs':
+          if (!(await sendInternJobUpdates())) {
+            await message.say('No new jobs found for Intern roles');
+          }
+          break;
+        case 'ng':
+        case 'ngjobs':
+          if (!(await sendNGJobUpdates())) {
+            await message.say('No new jobs found for New Graduate roles');
+          }
+          break;
+        case 'help':
+          await message.say(
+            'Available commands:\n' +
+              '- @BotName intern: Get new intern job postings\n' +
+              '- @BotName ng: Get new graduate job postings\n' +
+              '- @BotName help: Show this help message',
+          );
+          break;
+        default:
+          await message.say('Unrecognized command. Use "@BotName help" for available commands.');
       }
     }
   });
