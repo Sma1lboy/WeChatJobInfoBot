@@ -4,9 +4,15 @@ import * as path from 'path';
 import { jobWxBotConfig } from '../../package.json';
 import * as os from 'os';
 import { Config } from '../config';
-import { Job } from '../types';
+import { Job, JobProvider } from '../types';
 
-export class InternJobProvider {
+/**
+ * @class InternJobProvider
+ * @implements {JobProvider}
+ * @description Provides internship job listings for students
+ * @source https://github.com/SimplifyJobs/Summer2025-Internships
+ */
+export class InternJobProvider implements JobProvider {
   private sentJobsPath: string;
   private config: Config;
   private githubUrl: string =

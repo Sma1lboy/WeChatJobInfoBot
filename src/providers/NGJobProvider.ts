@@ -4,9 +4,15 @@ import * as path from 'path';
 import { jobWxBotConfig } from '../../package.json';
 import * as os from 'os';
 import { Config } from '../config';
-import { Job } from '../types';
+import { Job, JobProvider } from '../types';
 
-export class NGJobProvider {
+/**
+ * @class NGJobProvider
+ * @implements {JobProvider}
+ * @description Provides new graduate job listings for recent graduates
+ * @source https://github.com/SimplifyJobs/New-Grad-Positions
+ */
+export class NGJobProvider implements JobProvider {
   private sentJobsPath: string;
   private config: Config;
   private githubUrl: string =
