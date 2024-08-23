@@ -31,7 +31,7 @@
 
 ## 配置
 
-该项目配置使用`jobWxBotConfig`部分在`package.json`。主要配置项如下：
+该项目配置使用`jobWxBotConfig`部分在`package.json`。以下是主要配置项：
 
 ```json
 "jobWxBotConfig": {
@@ -64,4 +64,4 @@
 
 ## 执照
 
-[在此插入您的许可证信息]
+[和](./LICENSE)
