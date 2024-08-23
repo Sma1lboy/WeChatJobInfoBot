@@ -68,4 +68,4 @@ Pull requests are welcome to improve this project. If you have any suggestions o
 
 ## License
 
-[Insert your license information here]
+[MIT](./LICENSE)
