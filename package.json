@@ -13,14 +13,21 @@
   },
   "jobWxBotConfig": {
     "maxDays": 2,
-    "jobsPerMessage": 3
+    "jobsPerMessage": 3,
+    "minsCheckInterval": 5,
+    "rooms": [
+      "测试bot"
+    ]
   },
   "dependencies": {
+    "@types/qrcode-terminal": "^0.12.2",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
+    "axios": "^1.7.5",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
+    "qrcode-terminal": "^0.12.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "wechaty": "^1.20.2"
