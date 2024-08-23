@@ -1,21 +1,26 @@
 {
   "name": "job-position-wechat-bot",
   "version": "1.0.0",
-  "main": "index.ts",
   "author": "Jackson Chen",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node index.ts",
-    "build": "tsc"
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "start:prod": "npm run build && node build/index.js",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "jobWxBotConfig": {
+    "maxDays": 2,
+    "jobsPerMessage": 3
   },
   "dependencies": {
-    "@types/qrcode-terminal": "^0.12.2",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.2.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.3.3",
-    "qrcode-terminal": "^0.12.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "wechaty": "^1.20.2"
