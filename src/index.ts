@@ -1,13 +1,13 @@
 import { WechatyBuilder, Contact, Room, Message } from 'wechaty';
 import { ContactImpl } from 'wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal';
-import { InternJobProvider, Job } from './intern-job-provider';
+import { InternJobProvider, NGJobProvider, Job } from './intern-job-provider';
 import { jobWxBotConfig } from '../package.json';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];
-const jobProvider = new InternJobProvider();
-
+const InternJob = new InternJobProvider();
+const NGJob = new NGJobProvider();
 function displayStartupBanner() {
   const banner = `
   ____    __  __    _    _     _     ____   ___ _____
@@ -32,14 +32,35 @@ function displayStartupBanner() {
   console.log('\x1b[35m%s\x1b[0m', '🔍 Scanning QR Code to log in...\n'); // Magenta color
 }
 
-async function sendJobUpdates() {
+async function sendInternJobUpdates() {
   if (targetRooms.length === 0) {
     console.log('No target rooms set');
     return;
   }
-  const newJobs = await jobProvider.getNewJobs();
-  if (newJobs.length > 0) {
-    const messages = jobProvider.formatJobMessages(newJobs);
+  const newInternJobs = await InternJob.getNewJobs();
+  if (newInternJobs.length > 0) {
+    const messages = InternJob.formatJobMessages(newInternJobs);
+    for (const room of targetRooms) {
+      for (const message of messages) {
+        await room.say(message);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+    return true;
+  } else {
+    console.log('No new jobs found');
+    return false;
+  }
+}
+
+async function sendNGJobUpdates() {
+  if (targetRooms.length === 0) {
+    console.log('No target rooms set');
+    return;
+  }
+  const newNGJobs = await NGJob.getNewJobs();
+  if (newNGJobs.length > 0) {
+    const messages = NGJob.formatJobMessages(newNGJobs);
     for (const room of targetRooms) {
       for (const message of messages) {
         await room.say(message);
@@ -76,8 +97,10 @@ wechaty
         '\x1b[36m%s\x1b[0m',
         `🚀 ${targetRooms.length} target room(s) found. Bot is ready!`,
       ); // Cyan color
-      setInterval(sendJobUpdates, jobWxBotConfig.minsCheckInterval * 60 * 1000);
-      sendJobUpdates();
+      setInterval(sendInternJobUpdates, jobWxBotConfig.minsCheckInterval * 60 * 1000);
+      setInterval(sendNGJobUpdates, jobWxBotConfig.minsCheckInterval * 60 * 1000);
+      sendInternJobUpdates();
+      sendNGJobUpdates();
     } else {
       console.log('\x1b[31m%s\x1b[0m', '❌ No target rooms found. Bot cannot operate.'); // Red color
     }
@@ -86,9 +109,14 @@ wechaty
     //TODO: need commands module
     //TOOD: need debug mode
     console.log(`Message received: ${message.text()}`);
-    if (message.text().toLowerCase() === 'jobs') {
-      if (!(await sendJobUpdates())) {
-        message.say('No new jobs found for Intern/NG roles');
+    if (message.text().toLowerCase() === '/internjobs') {
+      if (!(await sendInternJobUpdates())) {
+        message.say('No new jobs found for Intern roles');
+      }
+    }
+    if (message.text().toLowerCase() === '/ngjobs') {
+      if (!(await sendNGJobUpdates())) {
+        message.say('No new jobs found for ng roles');
       }
     }
   });
