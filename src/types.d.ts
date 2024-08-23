@@ -25,3 +25,7 @@ export interface JobProvider {
    */
   formatJobMessages(jobs: Job[]): string[];
 }
+
+interface TopicsLocal {
+  topics: string[];
+}
