@@ -10,6 +10,7 @@ export interface Job {
   location: string;
   applicationLink: string;
   datePosted: string;
+  annotations: string[];
 }
 
 export interface Config {
@@ -60,17 +61,38 @@ export class InternJobProvider {
           if (company !== '↳') {
             lastValidCompany = company;
           }
+          const role = columns[2].trim();
+          const annotations = this.getJobAnnotations(role);
+
+          // 如果职位已关闭，则跳过
+          if (annotations.includes('Closed')) {
+            return null;
+          }
+
           return {
             company: company === '↳' ? lastValidCompany : company,
-            role: columns[2].trim(),
+            role: this.cleanRole(role),
             location: this.cleanLocation(columns[3].trim()),
             applicationLink: this.extractApplicationLink(columns[4].trim()),
             datePosted: columns[5].trim(),
+            annotations: annotations,
           };
         }
         return null;
       })
       .filter((job): job is Job => job !== null);
+  }
+
+  private getJobAnnotations(role: string): string[] {
+    const annotations: string[] = [];
+    if (role.includes('🛂')) annotations.push('No Sponsorship');
+    if (role.includes('🇺🇸')) annotations.push('U.S. Citizenship Required');
+    if (role.includes('🔒')) annotations.push('Closed');
+    return annotations;
+  }
+
+  private cleanRole(role: string): string {
+    return role.replace(/[🛂🇺🇸🔒]/g, '').trim();
   }
 
   private cleanCompanyName(company: string): string {
@@ -175,14 +197,18 @@ export class InternJobProvider {
     return messages;
   }
 
-  private formatJobMessage(job: Job): string {
-    return `
+  public formatJobMessage(job: Job): string {
+    let message = `
 🏢 Company: ${job.company}
 💼 Role: ${job.role}
 📍 Location: ${job.location}
 🔗 Apply: ${job.applicationLink}
 📅 Posted: ${job.datePosted}
-----------------------------
 `;
+    if (job.annotations.length > 0) {
+      message += `⚠️ Note: ${job.annotations.join(', ')}\n`;
+    }
+    message += '----------------------------\n';
+    return message;
   }
 }
