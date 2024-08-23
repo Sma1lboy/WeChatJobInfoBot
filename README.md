@@ -1,6 +1,6 @@
 # WeChat Job Bot
 
-[中文版 (Chinese Version)](./README_CN.md)
+[中文版 (Chinese Version)](./readme-zh-CN.md)
 
 ## Project Overview
 
@@ -28,6 +28,8 @@ WeChat Job Bot is an automated tool designed to share the latest internship and 
 2. **Debug Mode**: Will introduce a debug mode to facilitate testing and troubleshooting for developers.
 3. **Advanced Filtering**: Allow users to set more filtering conditions, such as company, job type, etc.
 4. **Personalized Push**: Push job information based on user interests and skill match.
+5. **Admin User**: Adding admin user that could using some super command without restart bot every time
+6. **Auto update**: Adding auto check bot update information and update automatically without doing operation on server
 
 ## Configuration
 
