@@ -13,6 +13,8 @@ import { Job, JobProvider } from '../types';
  * @source https://github.com/SimplifyJobs/New-Grad-Positions
  */
 export class NGJobProvider implements JobProvider {
+  readonly jobType = 'New Graduate';
+
   private sentJobsPath: string;
   private config: Config;
   private githubUrl: string =
@@ -136,16 +138,22 @@ export class NGJobProvider implements JobProvider {
       'Dec',
     ];
 
-    return jobs.filter((job) => {
-      const [month, day] = job.datePosted.split(' ');
-      const jobDate = new Date(today.getFullYear(), months.indexOf(month), parseInt(day));
+    return jobs
+      .filter((job) => {
+        const [month, day] = job.datePosted.split(' ');
+        const jobDate = new Date(today.getFullYear(), months.indexOf(month), parseInt(day));
 
-      if (jobDate > today) {
-        jobDate.setFullYear(jobDate.getFullYear() - 1);
-      }
+        if (jobDate > today) {
+          jobDate.setFullYear(jobDate.getFullYear() - 1);
+        }
 
-      return jobDate >= cutoffDate;
-    });
+        return jobDate >= cutoffDate;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.datePosted);
+        const dateB = new Date(b.datePosted);
+        return dateA.getTime() - dateB.getTime();
+      });
   }
 
   public async getNewJobs(): Promise<Job[]> {
@@ -171,7 +179,7 @@ export class NGJobProvider implements JobProvider {
     );
 
     if (newJobs.length > 0) {
-      sentJobs = [...sentJobs, ...newJobs];
+      sentJobs = [...newJobs, ...sentJobs];
       fs.writeFileSync(this.sentJobsPath, JSON.stringify(sentJobs));
     }
 
@@ -180,14 +188,24 @@ export class NGJobProvider implements JobProvider {
 
   public formatJobMessages(jobs: Job[]): string[] {
     const messages: string[] = [];
-    for (let i = 0; i < jobs.length; i += this.config.jobsPerMessage) {
-      const jobGroup = jobs.slice(i, i + this.config.jobsPerMessage);
-      let message = '📢 New Job Opportunities for New Graduates 📢\n\n';
-      jobGroup.forEach((job) => {
-        message += this.formatJobMessage(job);
-      });
-      messages.push(message);
+    let currentMessage = `📢 New Job Opportunities for ${this.jobType} 📢\n\n`;
+    let jobCount = 0;
+
+    for (const job of jobs) {
+      currentMessage += this.formatJobMessage(job);
+      jobCount++;
+
+      if (jobCount === this.config.jobsPerMessage) {
+        messages.push(currentMessage);
+        currentMessage = `📢 New Job Opportunities for ${this.jobType} 📢\n\n`;
+        jobCount = 0;
+      }
     }
+
+    if (jobCount > 0) {
+      messages.push(currentMessage);
+    }
+
     return messages;
   }
 

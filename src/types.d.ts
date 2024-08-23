@@ -10,6 +10,8 @@ export interface Job {
  * Interface for job providers
  */
 export interface JobProvider {
+  readonly jobType: string;
+
   /**
    * Fetches new jobs from the source
    * @returns Promise<Job[]> An array of new job listings
