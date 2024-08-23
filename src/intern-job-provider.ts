@@ -38,14 +38,19 @@ export class InternJobProvider {
     const tableContent = tableMatch[1];
     const rows = tableContent.trim().split('\n');
 
+    let lastValidCompany = '';
     return rows
       .map((row) => {
         const columns = row.split('|');
         if (columns.length >= 6) {
+          const company = this.cleanCompanyName(columns[1].trim());
+          if (company !== '↳') {
+            lastValidCompany = company;
+          }
           return {
-            company: columns[1].trim(),
+            company: company === '↳' ? lastValidCompany : company,
             role: columns[2].trim(),
-            location: columns[3].trim(),
+            location: this.cleanLocation(columns[3].trim()),
             applicationLink: this.extractApplicationLink(columns[4].trim()),
             datePosted: columns[5].trim(),
           };
@@ -53,6 +58,14 @@ export class InternJobProvider {
         return null;
       })
       .filter((job): job is Job => job !== null);
+  }
+
+  private cleanCompanyName(company: string): string {
+    return company.replace(/\*\*\[(.*?)\].*?\*\*/, '$1');
+  }
+
+  private cleanLocation(location: string): string {
+    return location.replace(/<br>/g, ', ');
   }
 
   private extractApplicationLink(htmlString: string): string {
@@ -63,11 +76,34 @@ export class InternJobProvider {
 
   private filterJobsByDate(jobs: Job[], days: number): Job[] {
     const today = new Date();
-    const cutoffDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+    today.setHours(0, 0, 0, 0);
+    const cutoffDate = new Date(today);
+    cutoffDate.setDate(today.getDate() - days);
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
 
     return jobs.filter((job) => {
-      const datePosted = new Date(job.datePosted + ' ' + today.getFullYear());
-      return datePosted >= cutoffDate;
+      const [month, day] = job.datePosted.split(' ');
+      const jobDate = new Date(today.getFullYear(), months.indexOf(month), parseInt(day));
+
+      if (jobDate > today) {
+        jobDate.setFullYear(jobDate.getFullYear() - 1);
+      }
+
+      return jobDate >= cutoffDate;
     });
   }
 
@@ -107,14 +143,14 @@ export class InternJobProvider {
       const jobGroup = jobs.slice(i, i + this.config.jobsPerMessage);
       let message = '📢 New Job Opportunities 📢\n\n';
       jobGroup.forEach((job) => {
-        message += InternJobProvider.formatJobMessage(job);
+        message += this.formatJobMessage(job);
       });
       messages.push(message);
     }
     return messages;
   }
 
-  public static formatJobMessage(job: Job): string {
+  private formatJobMessage(job: Job): string {
     return `
 🏢 Company: ${job.company}
 💼 Role: ${job.role}
