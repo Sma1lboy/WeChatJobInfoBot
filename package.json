@@ -12,11 +12,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "jobWxBotConfig": {
-    "maxDays": 2,
+    "maxDays": 3,
     "jobsPerMessage": 3,
     "minsCheckInterval": 5,
     "rooms": [
-      "测试bot"
+      ""
     ]
   },
   "dependencies": {

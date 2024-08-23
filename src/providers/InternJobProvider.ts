@@ -60,7 +60,6 @@ export class InternJobProvider implements JobProvider {
           const role = columns[2].trim();
           const annotations = this.getJobAnnotations(role);
 
-          // 如果职位已关闭，则跳过
           if (annotations.includes('Closed')) {
             return null;
           }

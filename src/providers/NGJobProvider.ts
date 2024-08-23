@@ -60,7 +60,6 @@ export class NGJobProvider implements JobProvider {
           const role = columns[2].trim();
           const annotations = this.getJobAnnotations(role);
 
-          // 如果职位已关闭，则跳过
           if (annotations.includes('Closed')) {
             return null;
           }
@@ -210,7 +209,6 @@ export class NGJobProvider implements JobProvider {
   }
 
   public formatJobMessage(job: Job): string {
-    // Remove markdown formatting from company name
     const cleanCompany = job.company.replace(/\*\*/g, '').replace(/\[|\]/g, '');
 
     let message = `
