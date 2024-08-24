@@ -7,6 +7,7 @@ import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
 import { JobProvider, TopicsLocal } from './types';
 import { CommandHandler } from './command-handler';
+import cron from 'node-cron';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];
@@ -75,13 +76,32 @@ async function getTargetRooms(): Promise<Room[]> {
   return validRooms;
 }
 
-async function getDailySummery() {}
+const executeCommandInAllRooms = async (command: string, silent: boolean) => {
+  for (const room of targetRooms) {
+    await commandHandler.handleCommand(
+      {
+        text: () => `@BOT ${command}`,
+        room: () => room,
+      } as any,
+      silent,
+    );
+  }
+};
 
+async function checkAndTriggerDailySummary() {
+  await executeCommandInAllRooms('intern-daily', true);
+  await executeCommandInAllRooms('ng-daily', true);
+}
+cron.schedule('0 20 * * *', async () => {
+  console.log('Running a job at 15:44');
+  await checkAndTriggerDailySummary();
+});
 let commandHandler: CommandHandler;
 
 wechaty
   .on('scan', (qrcodeUrl: string, status) => {
     console.log(qrcodeTerminal.generate(qrcodeUrl, { small: true }));
+    console.log(`Scan the QR code or visit this URL to log in: ${qrcodeUrl}`);
   })
   .on('login', async (user: ContactImpl) => {
     console.log('\x1b[36m%s\x1b[0m', `🎉 User ${user} logged in successfully!`);
@@ -94,18 +114,6 @@ wechaty
         '\x1b[36m%s\x1b[0m',
         `🚀 ${targetRooms.length} target room(s) found. Bot is ready!`,
       );
-
-      const executeCommandInAllRooms = async (command: string, silent: boolean) => {
-        for (const room of targetRooms) {
-          await commandHandler.handleCommand(
-            {
-              text: () => `@BOT ${command}`,
-              room: () => room,
-            } as any,
-            silent,
-          );
-        }
-      };
 
       setInterval(
         () => executeCommandInAllRooms('intern', true),

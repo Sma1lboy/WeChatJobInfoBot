@@ -2,7 +2,7 @@ import { Message, Room, Contact } from 'wechaty';
 import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
-import { JobProvider, JobType } from './types';
+import { AnnotationType, Job, JobProvider, JobType } from './types';
 
 interface Command {
   name: string;
@@ -101,7 +101,140 @@ export class CommandHandler {
           await this.sendMessage(message, helpMessage);
         },
       },
+      {
+        name: 'intern-daily',
+        aliases: [],
+        description:
+          'Provides a summary of all internship positions posted in the last 24 hours within the room.',
+        execute: async (message: Message) => {
+          const room = message.room();
+          const roomTopic = await room?.topic();
+          if (!roomTopic || !room) return;
+          await this.sendJobDailySummary(room, JobType.INTERN);
+        },
+      },
+      {
+        name: 'ng-daily',
+        aliases: [],
+        description:
+          'Provides a summary of all new grad positions posted in the last 24 hours within the room.',
+        execute: async (message: Message) => {
+          const room = message.room();
+          const roomTopic = await room?.topic();
+          if (!roomTopic || !room) return;
+          await this.sendJobDailySummary(room, JobType.NEW_GRAD);
+        },
+      },
     ];
+  }
+
+  private async sendJobDailySummary(room: Room, jobType: JobType) {
+    const roomTopic = await room.topic();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    let allJobs: Job[] = [];
+    for (const provider of this.jobProviders) {
+      if (provider.jobType === jobType) {
+        const jobs = await provider.getAllSentJobMessages(roomTopic);
+        allJobs = allJobs.concat(jobs);
+      }
+    }
+
+    const recentJobs = allJobs.filter((job) => {
+      const jobDate = new Date(job.dateMessageSent);
+      return jobDate >= yesterday;
+    });
+
+    if (recentJobs.length === 0) {
+      await room.say(`No new ${jobType} positions were posted in the last 24 hours.`);
+      return;
+    }
+
+    const companySummary: Record<string, Job[]> = recentJobs.reduce(
+      (acc, job) => {
+        if (!acc[job.company]) {
+          acc[job.company] = [];
+        }
+        acc[job.company].push(job);
+        return acc;
+      },
+      {} as Record<string, Job[]>,
+    );
+
+    let summaryMessage = `📊 ${jobType} Daily Summary 📊\n\n`;
+    summaryMessage += `New ${jobType.toLowerCase()} positions in the last 24 hours:\n\n`;
+
+    const annotationIcons: Record<string, string> = {
+      [AnnotationType.NoSponsorship.toString()]: '🛂',
+      [AnnotationType.USCitizenshipRequired.toString()]: '🇺🇸',
+      [AnnotationType.Closed.toString()]: '🔒',
+    };
+
+    for (const [company, jobs] of Object.entries(companySummary)) {
+      summaryMessage += `🏢 ${company}:\n`;
+      jobs.forEach((job) => {
+        const jobAnnotationIcons = job.annotations.map((anno) => annotationIcons[anno]).join('');
+        summaryMessage += `   • ${job.role} (${job.location}) ${jobAnnotationIcons}\n`;
+      });
+      summaryMessage += '\n';
+    }
+
+    summaryMessage += `Total positions: ${recentJobs.length}\n\n`;
+    summaryMessage += 'Icon explanations:\n';
+    summaryMessage += '🛂 - No Sponsorship\n';
+    summaryMessage += '🇺🇸 - U.S. Citizenship Required\n';
+    summaryMessage += '🔒 - Closed\n';
+
+    const maxMessageLength = 4000;
+    if (summaryMessage.length > maxMessageLength) {
+      const messages = this.splitMessage(summaryMessage, maxMessageLength);
+      for (const msg of messages) {
+        await room.say(msg);
+      }
+    } else {
+      await room.say(summaryMessage);
+    }
+  }
+
+  private splitMessage(message: string, maxLength: number): string[] {
+    const messages: string[] = [];
+    let currentMessage = '';
+    const lines = message.split('\n');
+
+    for (const line of lines) {
+      if ((currentMessage + line + '\n').length > maxLength) {
+        if (currentMessage) {
+          messages.push(currentMessage.trim());
+          currentMessage = '';
+        }
+        if (line.length > maxLength) {
+          // If a single line is too long, split it
+          const words = line.split(' ');
+          let tempLine = '';
+          for (const word of words) {
+            if ((tempLine + word + ' ').length > maxLength) {
+              messages.push(tempLine.trim());
+              tempLine = '';
+            }
+            tempLine += word + ' ';
+          }
+          if (tempLine) {
+            currentMessage = tempLine;
+          }
+        } else {
+          currentMessage = line + '\n';
+        }
+      } else {
+        currentMessage += line + '\n';
+      }
+    }
+
+    if (currentMessage) {
+      messages.push(currentMessage.trim());
+    }
+
+    return messages;
   }
 
   async handleCommand(message: Message, silent = false) {

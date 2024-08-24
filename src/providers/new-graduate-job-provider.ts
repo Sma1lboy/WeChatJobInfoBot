@@ -1,5 +1,5 @@
 import { Config } from '../config';
-import { Job, JobType } from '../types';
+import { AnnotationType, Job, JobType } from '../types';
 import { BaseJobProvider } from './job-provider-base';
 
 /**
@@ -76,9 +76,9 @@ export class NewGraduateJobProvider extends BaseJobProvider {
 
   private getJobAnnotations(role: string): string[] {
     const annotations: string[] = [];
-    if (role.includes('🛂')) annotations.push('No Sponsorship');
-    if (role.includes('🇺🇸')) annotations.push('U.S. Citizenship Required');
-    if (role.includes('🔒')) annotations.push('Closed');
+    if (role.includes('🛂')) annotations.push(AnnotationType.NoSponsorship);
+    if (role.includes('🇺🇸')) annotations.push(AnnotationType.USCitizenshipRequired);
+    if (role.includes('🔒')) annotations.push(AnnotationType.Closed);
     return annotations;
   }
 
