@@ -16,7 +16,7 @@ export interface JobProvider {
    * Fetches new jobs from the source
    * @returns Promise<Job[]> An array of new job listings
    */
-  getNewJobs(): Promise<Job[]>;
+  getNewJobs(roomTopic: string): Promise<Job[]>;
 
   /**
    * Formats job listings into messages

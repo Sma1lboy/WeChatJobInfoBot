@@ -61,18 +61,18 @@ export abstract class BaseJobProvider implements JobProvider {
       .sort((a, b) => {
         const dateA = new Date(a.datePosted);
         const dateB = new Date(b.datePosted);
-        return dateB.getTime() - dateA.getTime();
+        return dateA.getTime() - dateB.getTime();
       });
   }
 
-  public async getNewJobs(): Promise<Job[]> {
+  public async getNewJobs(roomTopic: string): Promise<Job[]> {
     const markdownContent = await this.fetchJobsFromGithub();
     const allJobs = this.extractTableFromMarkdown(markdownContent);
     const filteredJobs = this.filterJobsByDate(allJobs, this.config.maxDays);
 
     let sentJobs: Job[] = [];
-    if (FileSystemService.fileExists(this.sentJobsFileName)) {
-      sentJobs = FileSystemService.readJSON<Job[]>(this.sentJobsFileName);
+    if (FileSystemService.fileExists(roomTopic, this.sentJobsFileName)) {
+      sentJobs = FileSystemService.readJSON<Job[]>(roomTopic, this.sentJobsFileName);
     }
 
     const newJobs = filteredJobs.filter(
@@ -87,7 +87,7 @@ export abstract class BaseJobProvider implements JobProvider {
 
     if (newJobs.length > 0) {
       sentJobs = [...newJobs, ...sentJobs];
-      FileSystemService.writeJSON(this.sentJobsFileName, sentJobs);
+      FileSystemService.writeJSON(roomTopic, this.sentJobsFileName, sentJobs);
     }
 
     return newJobs;

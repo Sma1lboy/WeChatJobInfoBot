@@ -3,12 +3,12 @@ import { Job } from '../types';
 import { BaseJobProvider } from './job-provider-base';
 
 /**
- * @class NGJobProvider
+ * @class NewGraduateJobProvider
  * @extends {BaseJobProvider}
  * @description Provides new graduate job listings for recent graduates
  * @source https://github.com/SimplifyJobs/New-Grad-Positions
  */
-export class NGJobProvider extends BaseJobProvider {
+export class NewGraduateJobProvider extends BaseJobProvider {
   readonly jobType = 'New Graduate';
   protected githubUrl =
     'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/README.md';
@@ -87,7 +87,7 @@ export class NGJobProvider extends BaseJobProvider {
   }
 
   private cleanCompanyName(company: string): string {
-    return company.replace(/\*\*\[(.*?)\].*?\*\*/, '$1');
+    return company.replace(/\*\*/g, '').replace(/\[|\]/g, '').trim();
   }
 
   private cleanLocation(location: string): string {

@@ -2,26 +2,19 @@ import { WechatyBuilder, Contact, Room, Message } from 'wechaty';
 import { ContactImpl } from 'wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal';
 import { jobWxBotConfig } from '../package.json';
-import { InternJobProvider } from './providers/internship-job-provider';
-import { NGJobProvider } from './providers/new-graduate-job-provider';
-import path from 'path';
-import os from 'os';
-import * as fs from 'fs';
+import { InternshipJobProvider } from './providers/internship-job-provider';
+import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
+import { FileSystemService } from './file-system-service';
 import { TopicsLocal } from './types';
 import { CommandHandler } from './command-handler';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];
-const internJob = new InternJobProvider(jobWxBotConfig);
-const newGradJob = new NGJobProvider(jobWxBotConfig);
+const internJob = new InternshipJobProvider(jobWxBotConfig);
+const newGradJob = new NewGraduateJobProvider(jobWxBotConfig);
 
-const homeDir = os.homedir();
-const configDir = path.join(homeDir, '.job-wx-bot');
-const registeredTopicsPath = path.join(configDir, 'registered-topics.json');
-
-if (!fs.existsSync(configDir)) {
-  fs.mkdirSync(configDir, { recursive: true });
-}
+// Initialize FileSystemService
+FileSystemService.initialize();
 
 function displayStartupBanner() {
   const banner = `
@@ -49,15 +42,14 @@ async function updateRegisteredTopics(validRooms: Room[]) {
   const validTopics: TopicsLocal = {
     topics: await Promise.all(validRooms.map(async (room) => await room.topic())),
   };
-  fs.writeFileSync(registeredTopicsPath, JSON.stringify(validTopics, null, 2));
+  FileSystemService.writeGlobalJSON('registered-topics.json', validTopics);
 }
 
 async function getTargetRooms(): Promise<Room[]> {
   let roomTopics = new Set(jobWxBotConfig.rooms);
 
-  if (fs.existsSync(registeredTopicsPath)) {
-    const data = fs.readFileSync(registeredTopicsPath, 'utf8');
-    const topicsLocal: TopicsLocal = JSON.parse(data);
+  if (FileSystemService.globalFileExists('registered-topics.json')) {
+    const topicsLocal = FileSystemService.readGlobalJSON<TopicsLocal>('registered-topics.json');
     if (topicsLocal.topics) topicsLocal.topics.forEach((topic: string) => roomTopics.add(topic));
   }
 
@@ -97,16 +89,29 @@ wechaty
         '\x1b[36m%s\x1b[0m',
         `🚀 ${targetRooms.length} target room(s) found. Bot is ready!`,
       );
+
+      const executeCommandInAllRooms = async (command: string, silent: boolean) => {
+        for (const room of targetRooms) {
+          await commandHandler.handleCommand(
+            {
+              text: () => `@BOT ${command}`,
+              room: () => room,
+            } as any,
+            silent,
+          );
+        }
+      };
+
       setInterval(
-        () => commandHandler.handleCommand({ command: 'intern' } as any),
+        () => executeCommandInAllRooms('intern', true),
         jobWxBotConfig.minsCheckInterval * 60 * 1000,
       );
       setInterval(
-        () => commandHandler.handleCommand({ command: 'ng' } as any),
+        () => executeCommandInAllRooms('ng', true),
         jobWxBotConfig.minsCheckInterval * 60 * 1000,
       );
-      await commandHandler.handleCommand({ command: 'intern' } as any);
-      await commandHandler.handleCommand({ command: 'ng' } as any);
+      await executeCommandInAllRooms('intern', true);
+      await executeCommandInAllRooms('ng', true);
     } else {
       console.log('\x1b[31m%s\x1b[0m', '❌ No target rooms found. Bot cannot operate.');
     }

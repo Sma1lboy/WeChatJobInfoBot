@@ -3,12 +3,12 @@ import { Job } from '../types';
 import { BaseJobProvider } from './job-provider-base';
 
 /**
- * @class InternJobProvider
+ * @class InternshipJobProvider
  * @extends {BaseJobProvider}
  * @description Provides internship job listings for students
  * @source https://github.com/SimplifyJobs/Summer2025-Internships
  */
-export class InternJobProvider extends BaseJobProvider {
+export class InternshipJobProvider extends BaseJobProvider {
   readonly jobType = 'INTERN';
   protected githubUrl =
     'https://raw.githubusercontent.com/SimplifyJobs/Summer2025-Internships/dev/README.md';
@@ -84,7 +84,7 @@ export class InternJobProvider extends BaseJobProvider {
     return role.replace(/[🛂🇺🇸🔒]/g, '').trim();
   }
 
-  private cleanCompanyName(company: string): string {
+  protected cleanCompanyName(company: string): string {
     return company.replace(/\*\*\[(.*?)\].*?\*\*/, '$1');
   }
 
