@@ -5,6 +5,8 @@ export interface Job {
   applicationLink: string;
   datePosted: string;
   annotations: string[];
+  //messageSent
+  dateMessageSent: string;
 }
 /**
  * Interface for job providers

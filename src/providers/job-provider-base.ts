@@ -75,15 +75,22 @@ export abstract class BaseJobProvider implements JobProvider {
       sentJobs = FileSystemService.readJSON<Job[]>(roomTopic, this.sentJobsFileName);
     }
 
-    const newJobs = filteredJobs.filter(
-      (job) =>
-        !sentJobs.some(
-          (sentJob) =>
-            sentJob.company === job.company &&
-            sentJob.role === job.role &&
-            sentJob.datePosted === job.datePosted,
-        ),
-    );
+    const newJobs = filteredJobs
+      .filter(
+        (job) =>
+          !sentJobs.some(
+            (sentJob) =>
+              sentJob.company === job.company &&
+              sentJob.role === job.role &&
+              sentJob.datePosted === job.datePosted,
+          ),
+      )
+      .map((job) => {
+        return {
+          ...job,
+          dateMessageSent: new Date().toISOString(),
+        };
+      });
 
     if (newJobs.length > 0) {
       sentJobs = [...newJobs, ...sentJobs];
