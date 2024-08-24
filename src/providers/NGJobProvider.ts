@@ -1,46 +1,24 @@
-import axios from 'axios';
-import * as fs from 'fs';
-import * as path from 'path';
-import { jobWxBotConfig } from '../../package.json';
-import * as os from 'os';
 import { Config } from '../config';
-import { Job, JobProvider } from '../types';
+import { Job } from '../types';
+import { BaseJobProvider } from './BaseJobProvider';
 
 /**
  * @class NGJobProvider
- * @implements {JobProvider}
+ * @extends {BaseJobProvider}
  * @description Provides new graduate job listings for recent graduates
  * @source https://github.com/SimplifyJobs/New-Grad-Positions
  */
-export class NGJobProvider implements JobProvider {
+export class NGJobProvider extends BaseJobProvider {
   readonly jobType = 'New Graduate';
-
-  private sentJobsPath: string;
-  private config: Config;
-  private githubUrl: string =
+  protected githubUrl =
     'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/README.md';
+  protected sentJobsFileName = 'sent_new_grad_jobs.json';
 
-  constructor() {
-    const homeDir = os.homedir();
-    const cacheDir = path.join(homeDir, '.job-wx-bot');
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true });
-    }
-    this.sentJobsPath = path.join(cacheDir, 'sent_new_grad_jobs.json');
-    this.config = { ...jobWxBotConfig, jobsPerMessage: jobWxBotConfig.jobsPerMessage || 3 };
+  constructor(config: Config) {
+    super(config);
   }
 
-  private async fetchJobsFromGithub(): Promise<string> {
-    try {
-      const response = await axios.get(this.githubUrl);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching data from GitHub:', error);
-      throw error;
-    }
-  }
-
-  private extractTableFromMarkdown(markdownContent: string): Job[] {
+  protected extractTableFromMarkdown(markdownContent: string): Job[] {
     const tablePattern = /\| Company.*?\n([\s\S]*?)\n\n/;
     const tableMatch = markdownContent.match(tablePattern);
     if (!tableMatch) return [];
@@ -76,6 +54,24 @@ export class NGJobProvider implements JobProvider {
         return null;
       })
       .filter((job): job is Job => job !== null);
+  }
+
+  protected formatJobMessage(job: Job): string {
+    const cleanCompany = job.company.replace(/\*\*/g, '').replace(/\[|\]/g, '');
+
+    let message = `
+🏢 Company: ${cleanCompany}
+💼 Role: ${job.role}
+📍 Location: ${job.location}
+🔗 Apply: ${job.applicationLink}
+📅 Posted: ${job.datePosted}
+🧢 Type: New Grad
+`;
+    if (job.annotations.length > 0) {
+      message += `⚠️ Note: ${job.annotations.join(', ')}\n`;
+    }
+    message += '----------------------------\n';
+    return message;
   }
 
   private getJobAnnotations(role: string): string[] {
@@ -115,114 +111,5 @@ export class NGJobProvider implements JobProvider {
       return link;
     }
     return 'No link available';
-  }
-  private filterJobsByDate(jobs: Job[], days: number): Job[] {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const cutoffDate = new Date(today);
-    cutoffDate.setDate(today.getDate() - days);
-
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-
-    return jobs
-      .filter((job) => {
-        const [month, day] = job.datePosted.split(' ');
-        const jobDate = new Date(today.getFullYear(), months.indexOf(month), parseInt(day));
-
-        if (jobDate > today) {
-          jobDate.setFullYear(jobDate.getFullYear() - 1);
-        }
-
-        return jobDate >= cutoffDate;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.datePosted);
-        const dateB = new Date(b.datePosted);
-        return dateA.getTime() - dateB.getTime();
-      });
-  }
-
-  public async getNewJobs(): Promise<Job[]> {
-    const markdownContent = await this.fetchJobsFromGithub();
-    const allJobs = this.extractTableFromMarkdown(markdownContent);
-    const filteredJobs = this.filterJobsByDate(allJobs, this.config.maxDays);
-
-    let sentJobs: Job[] = [];
-    try {
-      sentJobs = JSON.parse(fs.readFileSync(this.sentJobsPath, 'utf8'));
-    } catch (error) {
-      console.log('No previous sent jobs found');
-    }
-
-    const newJobs = filteredJobs.filter(
-      (job) =>
-        !sentJobs.some(
-          (sentJob) =>
-            sentJob.company === job.company &&
-            sentJob.role === job.role &&
-            sentJob.datePosted === job.datePosted,
-        ),
-    );
-
-    if (newJobs.length > 0) {
-      sentJobs = [...newJobs, ...sentJobs];
-      fs.writeFileSync(this.sentJobsPath, JSON.stringify(sentJobs));
-    }
-
-    return newJobs;
-  }
-
-  public formatJobMessages(jobs: Job[]): string[] {
-    const messages: string[] = [];
-    let currentMessage = `📢 New Job Opportunities for ${this.jobType} 📢\n\n`;
-    let jobCount = 0;
-
-    for (const job of jobs) {
-      currentMessage += this.formatJobMessage(job);
-      jobCount++;
-
-      if (jobCount === this.config.jobsPerMessage) {
-        messages.push(currentMessage);
-        currentMessage = `📢 New Job Opportunities for ${this.jobType} 📢\n\n`;
-        jobCount = 0;
-      }
-    }
-
-    if (jobCount > 0) {
-      messages.push(currentMessage);
-    }
-
-    return messages;
-  }
-
-  public formatJobMessage(job: Job): string {
-    const cleanCompany = job.company.replace(/\*\*/g, '').replace(/\[|\]/g, '');
-
-    let message = `
-🏢 Company: ${cleanCompany}
-💼 Role: ${job.role}
-📍 Location: ${job.location}
-🔗 Apply: ${job.applicationLink}
-📅 Posted: ${job.datePosted}
-🧢 Type: New Grad
-`;
-    if (job.annotations.length > 0) {
-      message += `⚠️ Note: ${job.annotations.join(', ')}\n`;
-    }
-    message += '----------------------------\n';
-    return message;
   }
 }
