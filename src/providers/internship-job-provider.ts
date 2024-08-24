@@ -1,5 +1,6 @@
 import { Config } from '../config';
-import { Job } from '../types';
+import { Job, JobType } from '../types';
+
 import { BaseJobProvider } from './job-provider-base';
 
 /**
@@ -9,7 +10,7 @@ import { BaseJobProvider } from './job-provider-base';
  * @source https://github.com/SimplifyJobs/Summer2025-Internships
  */
 export class InternshipJobProvider extends BaseJobProvider {
-  readonly jobType = 'INTERN';
+  readonly jobType = JobType.INTERN;
   protected githubUrl =
     'https://raw.githubusercontent.com/SimplifyJobs/Summer2025-Internships/dev/README.md';
   protected sentJobsFileName = 'sent_intern_jobs.json';

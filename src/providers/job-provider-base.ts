@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Config } from '../config';
-import { Job, JobProvider } from '../types';
+import { Job, JobProvider, JobType } from '../types';
 import { FileSystemService } from '../file-system-service';
 
 export abstract class BaseJobProvider implements JobProvider {
-  abstract readonly jobType: string;
+  abstract readonly jobType: JobType;
   protected abstract githubUrl: string;
   protected abstract sentJobsFileName: string;
 
@@ -124,4 +124,12 @@ export abstract class BaseJobProvider implements JobProvider {
   }
 
   protected abstract formatJobMessage(job: Job): string;
+
+  public getAllSentJobMessages(roomTopic: string): Job[] {
+    let sentJobs: Job[] = [];
+    if (FileSystemService.fileExists(roomTopic, this.sentJobsFileName)) {
+      sentJobs = FileSystemService.readJSON<Job[]>(roomTopic, this.sentJobsFileName);
+    }
+    return sentJobs;
+  }
 }

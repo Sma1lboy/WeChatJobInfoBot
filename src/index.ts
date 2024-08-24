@@ -5,13 +5,16 @@ import { jobWxBotConfig } from '../package.json';
 import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
-import { TopicsLocal } from './types';
+import { JobProvider, TopicsLocal } from './types';
 import { CommandHandler } from './command-handler';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];
-const internJob = new InternshipJobProvider(jobWxBotConfig);
-const newGradJob = new NewGraduateJobProvider(jobWxBotConfig);
+
+const jobProviders: JobProvider[] = [
+  new InternshipJobProvider(jobWxBotConfig),
+  new NewGraduateJobProvider(jobWxBotConfig),
+];
 
 // Initialize FileSystemService
 FileSystemService.initialize();
@@ -72,6 +75,8 @@ async function getTargetRooms(): Promise<Room[]> {
   return validRooms;
 }
 
+async function getDailySummery() {}
+
 let commandHandler: CommandHandler;
 
 wechaty
@@ -82,7 +87,7 @@ wechaty
     console.log('\x1b[36m%s\x1b[0m', `🎉 User ${user} logged in successfully!`);
 
     targetRooms = await getTargetRooms();
-    commandHandler = new CommandHandler(internJob, newGradJob, targetRooms);
+    commandHandler = new CommandHandler(jobProviders, targetRooms);
 
     if (targetRooms.length > 0) {
       console.log(

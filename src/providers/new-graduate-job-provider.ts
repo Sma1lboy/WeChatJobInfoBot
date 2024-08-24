@@ -1,5 +1,5 @@
 import { Config } from '../config';
-import { Job } from '../types';
+import { Job, JobType } from '../types';
 import { BaseJobProvider } from './job-provider-base';
 
 /**
@@ -9,7 +9,7 @@ import { BaseJobProvider } from './job-provider-base';
  * @source https://github.com/SimplifyJobs/New-Grad-Positions
  */
 export class NewGraduateJobProvider extends BaseJobProvider {
-  readonly jobType = 'New Graduate';
+  readonly jobType = JobType.NEW_GRAD;
   protected githubUrl =
     'https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/README.md';
   protected sentJobsFileName = 'sent_new_grad_jobs.json';

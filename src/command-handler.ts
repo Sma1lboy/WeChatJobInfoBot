@@ -2,6 +2,7 @@ import { Message, Room, Contact } from 'wechaty';
 import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
+import { JobProvider, JobType } from './types';
 
 interface Command {
   name: string;
@@ -12,17 +13,11 @@ interface Command {
 
 export class CommandHandler {
   private commands: Command[];
-  private internJob: InternshipJobProvider;
-  private newGradJob: NewGraduateJobProvider;
   private targetRooms: Room[];
+  private jobProviders: JobProvider[];
 
-  constructor(
-    internJob: InternshipJobProvider,
-    newGradJob: NewGraduateJobProvider,
-    targetRooms: Room[],
-  ) {
-    this.internJob = internJob;
-    this.newGradJob = newGradJob;
+  constructor(jobProviders: JobProvider[], targetRooms: Room[]) {
+    this.jobProviders = jobProviders;
     this.targetRooms = targetRooms;
 
     this.commands = [
@@ -56,9 +51,13 @@ export class CommandHandler {
         execute: async (message: Message, args: string[], silent = false) => {
           const room = message.room();
           if (room) {
-            if (!(await this.sendJobUpdates(this.internJob, room))) {
-              if (!silent) {
-                await this.sendMessage(message, 'No new jobs found for Intern roles');
+            for (const provider of this.jobProviders) {
+              if (provider.jobType === JobType.INTERN) {
+                if (!(await this.sendJobUpdates(provider, room))) {
+                  if (!silent) {
+                    await this.sendMessage(message, 'No new jobs found for Intern roles');
+                  }
+                }
               }
             }
           } else {
@@ -73,9 +72,13 @@ export class CommandHandler {
         execute: async (message: Message, args: string[], silent = false) => {
           const room = message.room();
           if (room) {
-            if (!(await this.sendJobUpdates(this.newGradJob, room))) {
-              if (!silent) {
-                await this.sendMessage(message, 'No new jobs found for New Graduate roles');
+            for (const provider of this.jobProviders) {
+              if (provider.jobType === JobType.NEW_GRAD) {
+                if (!(await this.sendJobUpdates(provider, room))) {
+                  if (!silent) {
+                    await this.sendMessage(message, 'No new jobs found for New Graduate roles');
+                  }
+                }
               }
             }
           } else {
@@ -152,10 +155,7 @@ export class CommandHandler {
     }
   }
 
-  private async sendJobUpdates(
-    provider: InternshipJobProvider | NewGraduateJobProvider,
-    room: Room,
-  ) {
+  private async sendJobUpdates(provider: JobProvider, room: Room) {
     const roomTopic = await room.topic();
     console.log(`Checking for new ${provider.jobType} jobs for room ${roomTopic}... now !`);
 

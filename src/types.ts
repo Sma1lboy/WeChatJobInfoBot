@@ -8,11 +8,17 @@ export interface Job {
   //messageSent
   dateMessageSent: string;
 }
+
+export enum JobType {
+  INTERN = 'Internship',
+  NEW_GRAD = 'New Graduate',
+}
+
 /**
  * Interface for job providers
  */
 export interface JobProvider {
-  readonly jobType: string;
+  readonly jobType: JobType;
 
   /**
    * Fetches new jobs from the source
@@ -28,6 +34,6 @@ export interface JobProvider {
   formatJobMessages(jobs: Job[]): string[];
 }
 
-interface TopicsLocal {
+export interface TopicsLocal {
   topics: string[];
 }
