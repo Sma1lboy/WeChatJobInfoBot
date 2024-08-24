@@ -27,11 +27,11 @@
 3.  **高级过滤**：允许用户设置更多过滤条件，如公司、职位类型等。
 4.  **个性化推送**：根据用户兴趣和技能匹配推送职位信息。
 5.  **管理员用户**：添加管理员用户，可以使用一些超级命令，而无需每次都重新启动机器人
-6.  **自动更新**: Adding auto check bot update information and update automatically without doing operation on server
+6.  **自动更新**：添加自动检查bot更新信息并自动更新，无需在服务器上进行操作
 
 ## 配置
 
-该项目配置使用`jobWxBotConfig`部分在`package.json`。主要配置项如下：
+该项目配置使用`jobWxBotConfig`部分在`package.json`。以下是主要配置项：
 
 ```json
 "jobWxBotConfig": {
