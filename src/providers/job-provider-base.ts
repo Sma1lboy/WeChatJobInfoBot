@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Config } from '../config';
 import { Job, JobProvider } from '../types';
-import { FileSystemService } from '../FileSystemService';
+import { FileSystemService } from '../file-system-service';
 
 export abstract class BaseJobProvider implements JobProvider {
   abstract readonly jobType: string;

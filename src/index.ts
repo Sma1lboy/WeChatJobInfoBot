@@ -2,13 +2,13 @@ import { WechatyBuilder, Contact, Room, Message } from 'wechaty';
 import { ContactImpl } from 'wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal';
 import { jobWxBotConfig } from '../package.json';
-import { InternJobProvider } from './providers/InternJobProvider';
-import { NGJobProvider } from './providers/NGJobProvider';
+import { InternJobProvider } from './providers/internship-job-provider';
+import { NGJobProvider } from './providers/new-graduate-job-provider';
 import path from 'path';
 import os from 'os';
 import * as fs from 'fs';
 import { TopicsLocal } from './types';
-import { CommandHandler } from './commandHandler';
+import { CommandHandler } from './command-handler';
 
 const wechaty = WechatyBuilder.build();
 let targetRooms: Room[] = [];

@@ -1,6 +1,6 @@
 import { Config } from '../config';
 import { Job } from '../types';
-import { BaseJobProvider } from './BaseJobProvider';
+import { BaseJobProvider } from './job-provider-base';
 
 /**
  * @class NGJobProvider

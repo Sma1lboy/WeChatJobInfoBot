@@ -1,7 +1,7 @@
 import { Message, Room, Contact } from 'wechaty';
-import { InternJobProvider } from './providers/InternJobProvider';
-import { NGJobProvider } from './providers/NGJobProvider';
-import { FileSystemService } from './FileSystemService';
+import { InternJobProvider } from './providers/internship-job-provider';
+import { NGJobProvider } from './providers/new-graduate-job-provider';
+import { FileSystemService } from './file-system-service';
 
 interface Command {
   name: string;
