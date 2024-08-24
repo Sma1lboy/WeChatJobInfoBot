@@ -16,9 +16,9 @@
 
 1.  **自动获取工作**：定期从指定来源检索最新的实习和应届毕业生的职位发布。
 2.  **智能过滤**：自动过滤掉已关闭的职位申请。
-3.  **信息标注**: Adds special annotations for positions that don't offer visa sponsorship or require U.S. citizenship.
+3.  **信息标注**：为不提供签证赞助或需要美国公民身份的职位添加特殊注释。
 4.  **预定发送**：按照设定的时间间隔向指定的微信群发送新的职位信息。
-5.  **手动触发**: Allows manual triggering of job information updates by sending a "jobs" command in the group.
+5.  **手动触发**：允许通过在组中发送“jobs”命令来手动触发作业信息更新。
 
 ## 未来计划
 
