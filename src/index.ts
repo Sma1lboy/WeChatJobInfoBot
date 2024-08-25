@@ -1,4 +1,4 @@
-import { WechatyBuilder, Contact, Room, Message } from 'wechaty';
+import { WechatyBuilder, Contact, Room, Message, ScanStatus, log } from 'wechaty';
 import { ContactImpl } from 'wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal';
 import { jobWxBotConfig } from '../package.json';
@@ -99,9 +99,17 @@ cron.schedule('0 20 * * *', async () => {
 let commandHandler: CommandHandler;
 
 wechaty
-  .on('scan', (qrcodeUrl: string, status) => {
-    console.log(qrcodeTerminal.generate(qrcodeUrl, { small: true }));
-    console.log(`Scan the QR code or visit this URL to log in: ${qrcodeUrl}`);
+  .on('scan', (qrcode: string, status) => {
+    if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
+      const qrcodeImageUrl = ['https://wechaty.js.org/qrcode/', encodeURIComponent(qrcode)].join(
+        '',
+      );
+      console.info('StarterBot', 'onScan: %s(%s) - %s', ScanStatus[status], status, qrcodeImageUrl);
+
+      qrcodeTerminal.generate(qrcode, { small: true }); // show qrcode on console
+    } else {
+      console.info('StarterBot', 'onScan: %s(%s)', ScanStatus[status], status);
+    }
   })
   .on('login', async (user: ContactImpl) => {
     console.log('\x1b[36m%s\x1b[0m', `🎉 User ${user} logged in successfully!`);
