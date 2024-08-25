@@ -31,7 +31,7 @@
 
 ## 配置
 
-该项目配置使用`jobWxBotConfig`部分在`package.json`。主要配置项如下：
+该项目配置使用`jobWxBotConfig`部分在`package.json`。以下是主要配置项：
 
 ```json
 "jobWxBotConfig": {
@@ -52,7 +52,7 @@
 ## 使用说明
 
 1.  确保安装了所有必需的依赖项。
-2.  配置`jobWxBotConfig`在`package.json`.
+2.  配置`jobWxBotConfig` in `package.json`.
 3.  运行机器人：
         npm start
 4.  扫描显示的二维码即可登录微信。
