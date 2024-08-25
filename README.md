@@ -1,6 +1,6 @@
 # WeChat Job Bot
 
-[中文版 (Chinese Version)](./readme-zh-CN.md)
+[中文版 (Chinese Version)](./README.zh-CN.md)
 
 ```
   ____    **  **    *    *     *     *___   ___ _____

@@ -4,16 +4,11 @@ We're thrilled that you're interested in contributing to the WeChat Job Bot proj
 
 ## Table of Contents
 
-1. [Code of Conduct](#code-of-conduct)
-2. [Getting Started](#getting-started)
-3. [How to Contribute](#how-to-contribute)
-4. [Issues](#issues)
-5. [Adding New Job Providers](#adding-new-job-providers)
-6. [Style Guide](#style-guide)
-
-## Code of Conduct
-
-This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to [project_email@example.com].
+1. [Getting Started](#getting-started)
+2. [How to Contribute](#how-to-contribute)
+3. [Issues](#issues)
+4. [Adding New Job Providers](#adding-new-job-providers)
+5. [Style Guide](#style-guide)
 
 ## Getting Started
 
