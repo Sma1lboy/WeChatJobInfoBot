@@ -31,7 +31,7 @@
 
 ## 配置
 
-该项目配置使用`jobWxBotConfig`部分在`package.json`。以下是主要配置项：
+该项目配置使用`jobWxBotConfig`部分在`package.json`。主要配置项如下：
 
 ```json
 "jobWxBotConfig": {
