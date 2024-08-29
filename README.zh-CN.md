@@ -22,6 +22,7 @@
 6.  **房间特定内存**：为每个微信群维护单独的工作记录，确保新添加的房间不会错过以前的工作岗位。
 7.  **每日总结**：提供每种职位类型的所有职位发布的每日摘要。
 8.  **模块化设计**：支持通过模块化架构轻松添加新的工作提供者。
+9.  **谷歌表格集成**：允许将作业数据备份到 Google Sheets（可选插件）。
 
 ## 未来计划
 
@@ -44,7 +45,8 @@
   "minsCheckInterval": 5,
   "rooms": [
     "TestBot"
-  ]
+  ],
+  "googleSheet": false
 }
 ```
 
@@ -52,6 +54,7 @@
 -   `jobsPerMessage`：每条消息中包含的最大作业数（默认值：3）
 -   `minsCheckInterval`：检查新作业的时间间隔，单位为分钟（默认：5分钟）
 -   `rooms`：发送职位信息的微信群名列表
+-   `googleSheet`：启用或禁用 Google Sheets 插件（默认值： false）
 
 ## 使用说明
 
@@ -75,7 +78,7 @@
 
 6.  扫描显示的二维码即可登录微信。
 
-7.  机器人将自动开始在配置的组中共享作业信息。
+7.  The bot will automatically start sharing job information in the configured groups.
 
 ## 可用命令
 
@@ -85,6 +88,45 @@
 -   `@BOT intern-daily`：获取过去 24 小时内发布的实习职位摘要
 -   `@BOT ng-daily`：获取过去 24 小时内发布的新毕业生职位的摘要
 -   `@BOT add-this`：将当前房间添加到机器人的目标列表中（仅限管理员）
+-   `@BOT sheet`：触发​​将当前作业数据备份到配置的Google Sheets（需要Google Sheets插件）
+
+## 谷歌表格插件
+
+微信求职机器人现在支持将职位数据备份到 Google Sheets。可以通过以下配置启用此功能`package.json`.
+
+### 启用 Google 表格插件
+
+要启用 Google 表格插件，请设置`googleSheet`选项`true`在`jobWxBotConfig`你的部分`package.json`:
+
+```json
+"jobWxBotConfig": {
+  ...
+  "googleSheet": true
+}
+```
+
+### 配置
+
+Google Sheets 插件需要以下环境变量：
+
+-   `GOOGLE_SERVICE_ACCOUNT_EMAIL`：您的 Google 服务帐户的电子邮件地址
+-   `GOOGLE_PRIVATE_KEY`：您的 Google 服务帐户的私钥
+-   `GOOGLE_SHEET_ID`：要备份数据的Google Sheet的ID
+
+确保在运行机器人之前设置这些环境变量。
+
+### 设置说明
+
+1.  创建 Google Cloud 项目并启用 Google Sheets API。
+2.  创建服务帐户并下载 JSON 密钥文件。
+3.  创建一个新的 Google 表格并使用您服务帐户的电子邮件地址进行共享。
+4.  设置所需的环境变量：
+        export GOOGLE_SERVICE_ACCOUNT_EMAIL='your-service-account@your-project.iam.gserviceaccount.com'
+        export GOOGLE_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\nYour Private Key Here\n-----END PRIVATE KEY-----\n'
+        export GOOGLE_SHEET_ID='your-google-sheet-id'
+5.  启用该插件`package.json`通过设置`"googleSheet": true`.
+
+现在，当您运行机器人时，它将能够将作业数据备份到您的 Google Sheet`@BOT sheet`使用命令。
 
 ## 贡献
 
