@@ -166,7 +166,9 @@ export class CommandHandler {
           }
           await GoogleSheetProvider.getInstance().addJobSheet('Intern', internJob);
           await GoogleSheetProvider.getInstance().addJobSheet('New Grad', newGradJob);
-          room.say('Sheet has been updated');
+          room.say(
+            `Generate google sheet success! Here is the link: https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
+          );
         },
       },
     ];
