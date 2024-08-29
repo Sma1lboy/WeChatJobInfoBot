@@ -5,7 +5,7 @@ import { jobWxBotConfig } from '../package.json';
 import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
-import { JobProvider, TopicsLocal } from './types';
+import { BaseCacheFileNames, JobProvider, TopicsLocal } from './types';
 import { CommandHandler } from './command-handler';
 import cron from 'node-cron';
 
@@ -46,33 +46,39 @@ async function updateRegisteredTopics(validRooms: Room[]) {
   const validTopics: TopicsLocal = {
     topics: await Promise.all(validRooms.map(async (room) => await room.topic())),
   };
-  FileSystemService.writeGlobalJSON('registered-topics.json', validTopics);
+  FileSystemService.writeBaseJSON(BaseCacheFileNames.REGISTERED_TOPICS, validTopics);
 }
 
 async function getTargetRooms(): Promise<Room[]> {
   let roomTopics = new Set(jobWxBotConfig.rooms);
 
-  if (FileSystemService.globalFileExists('registered-topics.json')) {
-    const topicsLocal = FileSystemService.readGlobalJSON<TopicsLocal>('registered-topics.json');
+  if (FileSystemService.baseFileExists(BaseCacheFileNames.REGISTERED_TOPICS)) {
+    const topicsLocal = FileSystemService.readBaseJSON<TopicsLocal>(
+      BaseCacheFileNames.REGISTERED_TOPICS,
+    );
+    console.log(topicsLocal);
     if (topicsLocal.topics) topicsLocal.topics.forEach((topic: string) => roomTopics.add(topic));
   }
-
   const roomPromises = Array.from(roomTopics).map(async (roomName: string) => {
-    const room = await wechaty.Room.find({ topic: roomName });
-    if (room) {
-      console.log('\x1b[32m%s\x1b[0m', `✅ Room "${roomName}" found`);
-      return room;
-    } else {
-      console.log('\x1b[31m%s\x1b[0m', `❌ Room "${roomName}" not found`);
+    try {
+      const room = await wechaty.Room.find({ topic: roomName });
+      if (room) {
+        console.log('\x1b[32m%s\x1b[0m', `✅ Room "${roomName}" found`);
+        return room;
+      } else {
+        console.log('\x1b[31m%s\x1b[0m', `❌ Room "${roomName}" not found`);
+        return null;
+      }
+    } catch (error) {
+      console.log('Error finding room', roomName, error);
       return null;
     }
   });
 
   const rooms = await Promise.all(roomPromises);
+  await console.log('chulaile rooms', rooms);
   const validRooms = rooms.filter((room): room is Room => room !== null);
-
   await updateRegisteredTopics(validRooms);
-
   return validRooms;
 }
 

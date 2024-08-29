@@ -2,7 +2,7 @@ import { Message, Room, Contact } from 'wechaty';
 import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
-import { AnnotationType, Job, JobProvider, JobType } from './types';
+import { AnnotationType, Job, JobProvider, JobType, RoomsCacheFileNames } from './types';
 
 interface Command {
   name: string;
@@ -123,6 +123,24 @@ export class CommandHandler {
           const roomTopic = await room?.topic();
           if (!roomTopic || !room) return;
           await this.sendJobDailySummary(room, JobType.NEW_GRAD);
+        },
+      },
+      {
+        name: 'excel',
+        aliases: [],
+        description: 'Get the excel sheet',
+        execute: async (message: Message) => {
+          const room = message.room();
+          const roomTopic = await room?.topic();
+          if (!roomTopic || !room) return;
+          //read roomTopic from
+          let jobs: Job[] = [];
+          if (FileSystemService.fileExists(roomTopic, RoomsCacheFileNames.SENT_INTERN_JOBS)) {
+            jobs = FileSystemService.readJSON<Job[]>(
+              roomTopic,
+              RoomsCacheFileNames.SENT_INTERN_JOBS,
+            );
+          }
         },
       },
     ];
@@ -275,13 +293,13 @@ export class CommandHandler {
     const registeredTopicsPath = 'registered-topics.json';
     let topicsLocal: { topics: string[] } = { topics: [] };
 
-    if (FileSystemService.globalFileExists(registeredTopicsPath)) {
-      topicsLocal = FileSystemService.readGlobalJSON<{ topics: string[] }>(registeredTopicsPath);
+    if (FileSystemService.baseFileExists(registeredTopicsPath)) {
+      topicsLocal = FileSystemService.readBaseJSON<{ topics: string[] }>(registeredTopicsPath);
     }
 
     if (!topicsLocal.topics.includes(roomTopic)) {
       topicsLocal.topics.push(roomTopic);
-      FileSystemService.writeGlobalJSON(registeredTopicsPath, topicsLocal);
+      FileSystemService.writeBaseJSON(registeredTopicsPath, topicsLocal);
       console.log(`Added room "${roomTopic}" to the registry.`);
     } else {
       console.log(`Room "${roomTopic}" is already in the registry.`);

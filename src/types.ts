@@ -50,3 +50,11 @@ export enum AnnotationType {
   USCitizenshipRequired = 'U.S. Citizenship Required',
   Closed = 'Closed',
 }
+
+export namespace RoomsCacheFileNames {
+  export const SENT_INTERN_JOBS = 'sent_intern_jobs.json';
+  export const SENT_NEW_GRAD_JOBS = 'sent_new_grad_jobs.json';
+}
+export namespace BaseCacheFileNames {
+  export const REGISTERED_TOPICS = 'registered-topics.json';
+}

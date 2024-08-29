@@ -54,28 +54,28 @@ export class FileSystemService {
     this.writeFile(roomTopic, fileName, jsonData);
   }
 
-  static writeGlobalFile(fileName: string, data: string): void {
+  static writeBaseFile(fileName: string, data: string): void {
     const filePath = path.join(this.baseDir, fileName);
     fs.writeFileSync(filePath, data);
   }
 
-  static readGlobalFile(fileName: string): string {
+  static readBaseFile(fileName: string): string {
     const filePath = path.join(this.baseDir, fileName);
     return fs.readFileSync(filePath, 'utf8');
   }
 
-  static globalFileExists(fileName: string): boolean {
+  static baseFileExists(fileName: string): boolean {
     const filePath = path.join(this.baseDir, fileName);
     return fs.existsSync(filePath);
   }
 
-  static writeGlobalJSON(fileName: string, data: any): void {
+  static writeBaseJSON(fileName: string, data: any): void {
     const jsonData = JSON.stringify(data, null, 2);
-    this.writeGlobalFile(fileName, jsonData);
+    this.writeBaseFile(fileName, jsonData);
   }
 
-  static readGlobalJSON<T>(fileName: string): T {
-    const data = this.readGlobalFile(fileName);
+  static readBaseJSON<T>(fileName: string): T {
+    const data = this.readBaseFile(fileName);
     return JSON.parse(data) as T;
   }
 }
