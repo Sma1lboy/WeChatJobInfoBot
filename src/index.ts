@@ -24,10 +24,10 @@ function displayStartupBanner() {
   const banner = `
   ____    __  __    _    _     _     ____   ___ _____
  / ___|  |  \\/  |  / \\  | |   | |   | __ ) / _ \\_   _|
- \\___ \\  | |\\/| | / _ \\ | |   | |   |  _ \\| | | || |  
-  ___) | | |  | |/ ___ \\| |___| |___| |_) | |_| || |  
- |____/  |_|  |_/_/   \\_\\_____|_____|____/ \\___/ |_|  
-                                                      
+ \\___ \\  | |\\/| | / _ \\ | |   | |   |  _ \\| | | || |
+  ___) | | |  | |/ ___ \\| |___| |___| |_) | |_| || |
+ |____/  |_|  |_/_/   \\_\\_____|_____|____/ \\___/ |_|
+
 `;
 
   console.log('\x1b[36m%s\x1b[0m', banner);
@@ -70,7 +70,7 @@ async function getTargetRooms(): Promise<Room[]> {
         return null;
       }
     } catch (error) {
-      console.log('Error finding room', roomName, error);
+      console.log('Error finding room', roomName);
       return null;
     }
   });
