@@ -24,6 +24,7 @@ WeChat Job Bot is an automated tool designed to share the latest internship and 
 6. **Room-Specific Memory**: Maintains separate job history for each WeChat group, ensuring newly added rooms don't miss out on previous job posts.
 7. **Daily Summary**: Provides a daily summary of all job postings for each job type.
 8. **Modular Design**: Supports easy addition of new job providers through a modular architecture.
+9. **Google Sheets Integration**: Allows backing up job data to Google Sheets (optional plugin).
 
 ## Future Plans
 
@@ -46,7 +47,8 @@ The project is configured using the `jobWxBotConfig` section in `package.json`. 
   "minsCheckInterval": 5,
   "rooms": [
     "TestBot"
-  ]
+  ],
+  "googleSheet": false
 }
 ```
 
@@ -54,6 +56,7 @@ The project is configured using the `jobWxBotConfig` section in `package.json`. 
 - `jobsPerMessage`: Maximum number of jobs to include in each message (default: 3)
 - `minsCheckInterval`: Time interval for checking new jobs, in minutes (default: 5 minutes)
 - `rooms`: List of WeChat group names to send job information to
+- `googleSheet`: Enable or disable the Google Sheets plugin (default: false)
 
 ## Usage Instructions
 
@@ -95,6 +98,47 @@ The project is configured using the `jobWxBotConfig` section in `package.json`. 
 - `@BOT intern-daily`: Get a summary of internship positions posted in the last 24 hours
 - `@BOT ng-daily`: Get a summary of new graduate positions posted in the last 24 hours
 - `@BOT add-this`: Add the current room to the bot's target list (admin only)
+- `@BOT sheet`: Trigger a backup of the current job data to the configured Google Sheet (requires Google Sheets plugin)
+
+## Google Sheets Plugin
+
+The WeChat Job Bot now supports backing up job data to Google Sheets. This feature can be enabled through the configuration in `package.json`.
+
+### Enabling the Google Sheets Plugin
+
+To enable the Google Sheets plugin, set the `googleSheet` option to `true` in the `jobWxBotConfig` section of your `package.json`:
+
+```json
+"jobWxBotConfig": {
+  ...
+  "googleSheet": true
+}
+```
+
+### Configuration
+
+The Google Sheets plugin requires the following environment variables:
+
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`: The email address of your Google Service Account
+- `GOOGLE_PRIVATE_KEY`: The private key of your Google Service Account
+- `GOOGLE_SHEET_ID`: The ID of the Google Sheet where data will be backed up
+
+Make sure to set these environment variables before running the bot.
+
+### Setup Instructions
+
+1. Create a Google Cloud Project and enable the Google Sheets API.
+2. Create a Service Account and download the JSON key file.
+3. Create a new Google Sheet and share it with the email address of your Service Account.
+4. Set the required environment variables:
+   ```
+   export GOOGLE_SERVICE_ACCOUNT_EMAIL='your-service-account@your-project.iam.gserviceaccount.com'
+   export GOOGLE_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\nYour Private Key Here\n-----END PRIVATE KEY-----\n'
+   export GOOGLE_SHEET_ID='your-google-sheet-id'
+   ```
+5. Enable the plugin in `package.json` by setting `"googleSheet": true`.
+
+Now, when you run the bot, it will be able to backup job data to your Google Sheet when the `@BOT sheet` command is used.
 
 ## Contributing
 
