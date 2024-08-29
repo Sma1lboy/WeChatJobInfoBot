@@ -17,7 +17,8 @@
     "minsCheckInterval": 5,
     "rooms": [
       ""
-    ]
+    ],
+    "googleSheet": false
   },
   "dependencies": {
     "@types/node-cron": "^3.0.11",
@@ -28,6 +29,8 @@
     "cron": "^3.1.7",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "google-auth-library": "^9.14.0",
+    "google-spreadsheet": "^4.1.2",
     "node-cron": "^3.0.3",
     "prettier": "^3.3.3",
     "qrcode-terminal": "^0.12.0",

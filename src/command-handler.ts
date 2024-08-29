@@ -3,9 +3,12 @@ import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
 import { AnnotationType, Job, JobProvider, JobType, RoomsCacheFileNames } from './types';
+import { GoogleSheetProvider } from './google-sheets-provider';
+import { jobWxBotConfig } from '../package.json';
 
 interface Command {
   name: string;
+  when?: boolean;
   aliases: string[];
   description: string;
   execute: (message: Message, args: string[], silent?: boolean) => Promise<void>;
@@ -19,7 +22,6 @@ export class CommandHandler {
   constructor(jobProviders: JobProvider[], targetRooms: Room[]) {
     this.jobProviders = jobProviders;
     this.targetRooms = targetRooms;
-
     this.commands = [
       {
         name: 'add-this',
@@ -93,6 +95,9 @@ export class CommandHandler {
         execute: async (message: Message) => {
           let helpMessage = 'Available commands:\n';
           this.commands.forEach((command) => {
+            if (command.when !== undefined && !command.when) {
+              return;
+            }
             helpMessage += `- @BOT ${command.name}: ${command.description}\n`;
             if (command.aliases.length > 0) {
               helpMessage += `  Aliases: ${command.aliases.join(', ')}\n`;
@@ -126,21 +131,42 @@ export class CommandHandler {
         },
       },
       {
-        name: 'excel',
+        name: 'sheet',
         aliases: [],
         description: 'Get the excel sheet',
+        when: jobWxBotConfig.googleSheet,
         execute: async (message: Message) => {
           const room = message.room();
           const roomTopic = await room?.topic();
           if (!roomTopic || !room) return;
           //read roomTopic from
-          let jobs: Job[] = [];
+          let internJob: Job[] = [];
           if (FileSystemService.fileExists(roomTopic, RoomsCacheFileNames.SENT_INTERN_JOBS)) {
-            jobs = FileSystemService.readJSON<Job[]>(
+            internJob = FileSystemService.readJSON<Job[]>(
               roomTopic,
               RoomsCacheFileNames.SENT_INTERN_JOBS,
             );
           }
+          let newGradJob: Job[] = [];
+          if (FileSystemService.fileExists(roomTopic, RoomsCacheFileNames.SENT_NEW_GRAD_JOBS)) {
+            newGradJob = FileSystemService.readJSON<Job[]>(
+              roomTopic,
+              RoomsCacheFileNames.SENT_NEW_GRAD_JOBS,
+            );
+          }
+          const doc = GoogleSheetProvider.getInstance().doc;
+          await doc.loadInfo();
+          try {
+            let sheet = doc.sheetsByTitle['Intern'];
+            await sheet.clear();
+            sheet = doc.sheetsByTitle['New Grad'];
+            await sheet.clear();
+          } catch (error) {
+            console.error('there is no intern or new grad sheet');
+          }
+          await GoogleSheetProvider.getInstance().addJobSheet('Intern', internJob);
+          await GoogleSheetProvider.getInstance().addJobSheet('New Grad', newGradJob);
+          room.say('Sheet has been updated');
         },
       },
     ];
@@ -182,7 +208,6 @@ export class CommandHandler {
 
     let summaryMessage = `📊 ${jobType} Daily Summary 📊\n\n`;
     summaryMessage += `New ${jobType.toLowerCase()} positions in the last 24 hours:\n\n`;
-
     const annotationIcons: Record<string, string> = {
       [AnnotationType.NoSponsorship.toString()]: '🛂',
       [AnnotationType.USCitizenshipRequired.toString()]: '🇺🇸',
@@ -263,7 +288,9 @@ export class CommandHandler {
     const command = this.commands.find(
       (cmd) => cmd.name === commandName || cmd.aliases.includes(commandName),
     );
-
+    if (command?.when !== undefined && !command.when) {
+      return;
+    }
     if (command) {
       const args = commandMatch ? commandMatch[1].split(' ').slice(1) : [];
       await command.execute(message, args, silent);
