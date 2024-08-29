@@ -78,7 +78,7 @@
 
 6.  扫描显示的二维码即可登录微信。
 
-7.  The bot will automatically start sharing job information in the configured groups.
+7.  机器人将自动开始在配置的组中共享作业信息。
 
 ## 可用命令
 
