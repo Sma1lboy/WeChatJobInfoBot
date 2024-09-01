@@ -3,7 +3,7 @@ import { InternshipJobProvider } from './providers/internship-job-provider';
 import { NewGraduateJobProvider } from './providers/new-graduate-job-provider';
 import { FileSystemService } from './file-system-service';
 import { AnnotationType, Job, JobProvider, JobType, RoomsCacheFileNames } from './types';
-import { GoogleSheetProvider } from './google-sheets-provider';
+import { GoogleSheetDoc } from './google-sheets-provider';
 import { jobWxBotConfig } from '../package.json';
 
 interface Command {
@@ -131,15 +131,23 @@ export class CommandHandler {
         },
       },
       {
-        name: 'sheet',
+        name: 'room-sheet',
         aliases: [],
-        description: 'Get the excel sheet',
+        description: 'Get All Jobs posted in this chat room',
         when: jobWxBotConfig.googleSheet,
         execute: async (message: Message) => {
+          console.log('1. Function called, message:', message);
+
           const room = message.room();
           const roomTopic = await room?.topic();
-          if (!roomTopic || !room) return;
-          //read roomTopic from
+
+          console.log('2. Room and roomTopic:', { room, roomTopic });
+
+          if (!roomTopic || !room) {
+            console.log('Room or roomTopic is undefined, exiting function');
+            return;
+          }
+
           let internJob: Job[] = [];
           if (FileSystemService.fileExists(roomTopic, RoomsCacheFileNames.SENT_INTERN_JOBS)) {
             internJob = FileSystemService.readJSON<Job[]>(
@@ -147,6 +155,9 @@ export class CommandHandler {
               RoomsCacheFileNames.SENT_INTERN_JOBS,
             );
           }
+
+          console.log('3. Intern jobs read:', internJob);
+
           let newGradJob: Job[] = [];
           if (FileSystemService.fileExists(roomTopic, RoomsCacheFileNames.SENT_NEW_GRAD_JOBS)) {
             newGradJob = FileSystemService.readJSON<Job[]>(
@@ -154,21 +165,29 @@ export class CommandHandler {
               RoomsCacheFileNames.SENT_NEW_GRAD_JOBS,
             );
           }
-          const doc = GoogleSheetProvider.getInstance().doc;
+
+          console.log('4. New grad jobs read:', newGradJob);
+
+          const today = new Date().getTime();
+          const googleSheetDoc = new GoogleSheetDoc();
+          await googleSheetDoc.initialize(`${roomTopic} Job Posted Info - ${today}`);
+          const doc = googleSheetDoc.doc;
+          if (!doc) return;
+
           await doc.loadInfo();
-          try {
-            let sheet = doc.sheetsByTitle['Intern'];
-            await sheet.clear();
-            sheet = doc.sheetsByTitle['New Grad'];
-            await sheet.clear();
-          } catch (error) {
-            console.error('there is no intern or new grad sheet');
-          }
-          await GoogleSheetProvider.getInstance().addJobSheet('Intern', internJob);
-          await GoogleSheetProvider.getInstance().addJobSheet('New Grad', newGradJob);
-          room.say(
-            `Generate google sheet success! Here is the link: https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
-          );
+
+          console.log('5. Google Sheet Doc created:', { googleSheetDoc, doc });
+
+          await googleSheetDoc.addJobSheet('Intern', internJob);
+          await googleSheetDoc.addJobSheet('New Grad', newGradJob);
+
+          console.log('9. Job sheets added');
+
+          doc.setPublicAccessLevel('reader');
+          let a = await doc.share('541898146chen@gmail.com');
+
+          console.log('10. Document shared, result:', a);
+          room.say('haohaohao');
         },
       },
     ];
